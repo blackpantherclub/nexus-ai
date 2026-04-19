@@ -831,7 +831,7 @@ const PLANS = {
 };
 
 // ============ PAGE ROUTING ============
-window.showPage = function showPage {
+window.showPage = function showPage(id) {
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   document.getElementById(id).classList.add('active');
   window.scrollTo(0,0);
@@ -933,7 +933,7 @@ function loginUser(name, email) {
 }
 
 // ============ CHAT ============
-window.initChat = function initChat {
+window.initChat = function initChat() {
   if (!currentUser) return;
   const plan = PLANS[currentUser.plan];
 
@@ -1200,13 +1200,14 @@ function showFilesInChat(files){
 
 
 // ============ INIT ============
-// Restore session
-const saved = localStorage.getItem('nexus_user');
-if (saved) {
-  currentUser = JSON.parse(saved);
-  selectedPlan = currentUser.plan;
+// Show landing by default — Firebase will redirect if user is logged in
+window.showPage('landingPage');
+
+// Restore API key
+if (apiKey) {
+  const btn = document.getElementById('sendMsgBtn');
+  if (btn) btn.disabled = false;
 }
-if (apiKey) document.getElementById('sendMsgBtn') && (document.getElementById('sendMsgBtn').disabled = false);
 </script>
 </body>
 </html>
