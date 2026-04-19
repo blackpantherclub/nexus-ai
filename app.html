@@ -503,13 +503,19 @@ function rmF(i){files.splice(i,1);rPrev();}
 // INIT — mostra landing SUBITO
 window.showPage = showPage;
 window.initChat = initChat;
+
+// Bridge per Firebase module (i moduli ES non condividono scope)
+window._setUser = function(userData) {
+  cu = userData;
+  sp = userData.plan;
+  initChat();
+  showPage('chatPage');
+};
+Object.defineProperty(window, '_sp', { get:()=>sp });
+
 showPage('landingPage');
 if(ak){const sb=document.getElementById('sb');if(sb)sb.disabled=false;}
 try{const s=localStorage.getItem('nexus_user');if(s){cu=JSON.parse(s);sp=cu.plan;}}catch(e){}
-
-// Rendi le variabili accessibili al modulo Firebase
-Object.defineProperty(window,'cu',{get:()=>cu,set:(v)=>{cu=v;}});
-Object.defineProperty(window,'sp',{get:()=>sp,set:(v)=>{sp=v;}});
 </script>
 
 <!-- Firebase — caricato dopo, non blocca nulla -->
@@ -521,26 +527,45 @@ Object.defineProperty(window,'sp',{get:()=>sp,set:(v)=>{sp=v;}});
     const{getFirestore,doc,setDoc,getDoc,updateDoc}=await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js');
     const app=initializeApp({apiKey:"AIzaSyDWs6ocXH2uuPXedt9pI6njkmRGqVhuf04",authDomain:"nexus-ai-ac207.firebaseapp.com",projectId:"nexus-ai-ac207",storageBucket:"nexus-ai-ac207.firebasestorage.app",messagingSenderId:"306814240505",appId:"1:306814240505:web:2a57dea5b31d7fc85fc428"});
     const auth=getAuth(app),db=getFirestore(app),gp=new GoogleAuthProvider();
+
     window.fbLogin=(em,pw)=>signInWithEmailAndPassword(auth,em,pw);
-    window.fbRegister=async(em,pw,name)=>{const c=await createUserWithEmailAndPassword(auth,em,pw);await setDoc(doc(db,'users',c.user.uid),{name,email:em,plan:sp||'free',msgCount:0,createdAt:new Date().toISOString()});return c;};
-    window.fbGoogleLogin=async()=>{const r=await signInWithPopup(auth,gp);const s=await getDoc(doc(db,'users',r.user.uid));if(!s.exists())await setDoc(doc(db,'users',r.user.uid),{name:r.user.displayName||'Utente',email:r.user.email,plan:'free',msgCount:0,createdAt:new Date().toISOString()});return r;};
+
+    window.fbRegister=async(em,pw,name)=>{
+      const cred=await createUserWithEmailAndPassword(auth,em,pw);
+      await setDoc(doc(db,'users',cred.user.uid),{name,email:em,plan:window._sp||'free',msgCount:0,createdAt:new Date().toISOString()});
+      return cred;
+    };
+
+    window.fbGoogleLogin=async()=>{
+      const r=await signInWithPopup(auth,gp);
+      const s=await getDoc(doc(db,'users',r.user.uid));
+      if(!s.exists()) await setDoc(doc(db,'users',r.user.uid),{name:r.user.displayName||'Utente',email:r.user.email,plan:'free',msgCount:0,createdAt:new Date().toISOString()});
+      return r;
+    };
+
     window.fbLogout=()=>signOut(auth);
     window.fbUpdateMsgCount=async(uid,cnt)=>{try{await updateDoc(doc(db,'users',uid),{msgCount:cnt});}catch(e){}};
+
     onAuthStateChanged(auth,async user=>{
       if(user){
         try{
           const s=await getDoc(doc(db,'users',user.uid));
           const d=s.exists()?s.data():{};
-          cu={name:d.name||user.displayName||'Utente',email:user.email,plan:d.plan||'free',msgCount:d.msgCount||0,uid:user.uid};
-          sp=cu.plan;
-          localStorage.setItem('nexus_user',JSON.stringify(cu));
-          if(window.initChat) window.initChat();
-          if(window.showPage) window.showPage('chatPage');
-        }catch(e){console.warn('Firestore:',e);}
+          // Usa window._setUser per aggiornare lo stato principale
+          const userData={name:d.name||user.displayName||'Utente',email:user.email,plan:d.plan||'free',msgCount:d.msgCount||0,uid:user.uid};
+          localStorage.setItem('nexus_user',JSON.stringify(userData));
+          if(window._setUser) window._setUser(userData);
+        }catch(e){
+          console.warn('Firestore:',e);
+          // Anche se Firestore fallisce, fai il login con i dati base
+          const userData={name:user.displayName||'Utente',email:user.email,plan:'free',msgCount:0,uid:user.uid};
+          localStorage.setItem('nexus_user',JSON.stringify(userData));
+          if(window._setUser) window._setUser(userData);
+        }
       }
     });
     console.log('Firebase OK');
-  }catch(e){console.warn('Firebase offline, modalità locale:',e.message);}
+  }catch(e){console.warn('Firebase offline:',e.message);}
 })();
 </script>
 
