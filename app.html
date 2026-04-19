@@ -309,7 +309,7 @@ const PL = { free:{label:'FREE',limit:10,chip:'free'}, pro:{label:'PRO',limit:50
 let cu=null, sp='free', ak=localStorage.getItem('nexus_key')||'', msgs=[], loading=false, files=[];
 
 // ROUTER
-function showPage(id){ document.querySelectorAll('.page').forEach(p=>p.classList.remove('active')); const el=document.getElementById(id); if(el){el.classList.add('active');} window.scrollTo(0,0); }
+window.showPage = function showPage(id){ document.querySelectorAll('.page').forEach(p=>p.classList.remove('active')); const el=document.getElementById(id); if(el){el.classList.add('active');} window.scrollTo(0,0); }
 
 // LANDING
 function choosePlan(p){ sp=p; showAuth('register'); }
@@ -368,7 +368,7 @@ function doLogout(){
 }
 
 // CHAT
-function initChat(){
+window.initChat = function initChat(){
   if(!cu) return;
   const p=PL[cu.plan]||PL.free;
   document.getElementById('cN').textContent=cu.name.split(' ')[0];
@@ -501,9 +501,15 @@ function rPrev(){
 function rmF(i){files.splice(i,1);rPrev();}
 
 // INIT — mostra landing SUBITO
+window.showPage = showPage;
+window.initChat = initChat;
 showPage('landingPage');
 if(ak){const sb=document.getElementById('sb');if(sb)sb.disabled=false;}
 try{const s=localStorage.getItem('nexus_user');if(s){cu=JSON.parse(s);sp=cu.plan;}}catch(e){}
+
+// Rendi le variabili accessibili al modulo Firebase
+Object.defineProperty(window,'cu',{get:()=>cu,set:(v)=>{cu=v;}});
+Object.defineProperty(window,'sp',{get:()=>sp,set:(v)=>{sp=v;}});
 </script>
 
 <!-- Firebase — caricato dopo, non blocca nulla -->
@@ -516,7 +522,7 @@ try{const s=localStorage.getItem('nexus_user');if(s){cu=JSON.parse(s);sp=cu.plan
     const app=initializeApp({apiKey:"AIzaSyDWs6ocXH2uuPXedt9pI6njkmRGqVhuf04",authDomain:"nexus-ai-ac207.firebaseapp.com",projectId:"nexus-ai-ac207",storageBucket:"nexus-ai-ac207.firebasestorage.app",messagingSenderId:"306814240505",appId:"1:306814240505:web:2a57dea5b31d7fc85fc428"});
     const auth=getAuth(app),db=getFirestore(app),gp=new GoogleAuthProvider();
     window.fbLogin=(em,pw)=>signInWithEmailAndPassword(auth,em,pw);
-    window.fbRegister=async(em,pw,name)=>{const c=await createUserWithEmailAndPassword(auth,em,pw);await setDoc(doc(db,'users',c.user.uid),{name,email:em,plan:window.sp||'free',msgCount:0,createdAt:new Date().toISOString()});return c;};
+    window.fbRegister=async(em,pw,name)=>{const c=await createUserWithEmailAndPassword(auth,em,pw);await setDoc(doc(db,'users',c.user.uid),{name,email:em,plan:sp||'free',msgCount:0,createdAt:new Date().toISOString()});return c;};
     window.fbGoogleLogin=async()=>{const r=await signInWithPopup(auth,gp);const s=await getDoc(doc(db,'users',r.user.uid));if(!s.exists())await setDoc(doc(db,'users',r.user.uid),{name:r.user.displayName||'Utente',email:r.user.email,plan:'free',msgCount:0,createdAt:new Date().toISOString()});return r;};
     window.fbLogout=()=>signOut(auth);
     window.fbUpdateMsgCount=async(uid,cnt)=>{try{await updateDoc(doc(db,'users',uid),{msgCount:cnt});}catch(e){}};
@@ -525,9 +531,9 @@ try{const s=localStorage.getItem('nexus_user');if(s){cu=JSON.parse(s);sp=cu.plan
         try{
           const s=await getDoc(doc(db,'users',user.uid));
           const d=s.exists()?s.data():{};
-          window.cu={name:d.name||user.displayName||'Utente',email:user.email,plan:d.plan||'free',msgCount:d.msgCount||0,uid:user.uid};
-          window.sp=window.cu.plan;
-          localStorage.setItem('nexus_user',JSON.stringify(window.cu));
+          cu={name:d.name||user.displayName||'Utente',email:user.email,plan:d.plan||'free',msgCount:d.msgCount||0,uid:user.uid};
+          sp=cu.plan;
+          localStorage.setItem('nexus_user',JSON.stringify(cu));
           if(window.initChat) window.initChat();
           if(window.showPage) window.showPage('chatPage');
         }catch(e){console.warn('Firestore:',e);}
