@@ -523,7 +523,7 @@ try{const s=localStorage.getItem('nexus_user');if(s){cu=JSON.parse(s);sp=cu.plan
 (async()=>{
   try{
     const{initializeApp}=await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js');
-    const{getAuth,createUserWithEmailAndPassword,signInWithEmailAndPassword,signInWithPopup,GoogleAuthProvider,onAuthStateChanged,signOut}=await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js');
+    const{getAuth,createUserWithEmailAndPassword,signInWithEmailAndPassword,signInWithPopup,signInWithRedirect,getRedirectResult,GoogleAuthProvider,onAuthStateChanged,signOut}=await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js');
     const{getFirestore,doc,setDoc,getDoc,updateDoc}=await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js');
     const app=initializeApp({apiKey:"AIzaSyDWs6ocXH2uuPXedt9pI6njkmRGqVhuf04",authDomain:"nexus-ai-ac207.firebaseapp.com",projectId:"nexus-ai-ac207",storageBucket:"nexus-ai-ac207.firebasestorage.app",messagingSenderId:"306814240505",appId:"1:306814240505:web:2a57dea5b31d7fc85fc428"});
     const auth=getAuth(app),db=getFirestore(app),gp=new GoogleAuthProvider();
@@ -537,11 +537,18 @@ try{const s=localStorage.getItem('nexus_user');if(s){cu=JSON.parse(s);sp=cu.plan
     };
 
     window.fbGoogleLogin=async()=>{
-      const r=await signInWithPopup(auth,gp);
-      const s=await getDoc(doc(db,'users',r.user.uid));
-      if(!s.exists()) await setDoc(doc(db,'users',r.user.uid),{name:r.user.displayName||'Utente',email:r.user.email,plan:'free',msgCount:0,createdAt:new Date().toISOString()});
-      return r;
+      await signInWithRedirect(auth,gp);
+      // onAuthStateChanged gestisce il risultato dopo il redirect
     };
+
+    // Gestisci il risultato del redirect Google
+    try {
+      const result = await getRedirectResult(auth);
+      if(result && result.user){
+        const s=await getDoc(doc(db,'users',result.user.uid));
+        if(!s.exists()) await setDoc(doc(db,'users',result.user.uid),{name:result.user.displayName||'Utente',email:result.user.email,plan:'free',msgCount:0,createdAt:new Date().toISOString()});
+      }
+    } catch(e){ console.warn('Redirect result error:', e.message); }
 
     window.fbLogout=()=>signOut(auth);
     window.fbUpdateMsgCount=async(uid,cnt)=>{try{await updateDoc(doc(db,'users',uid),{msgCount:cnt});}catch(e){}};
