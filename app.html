@@ -523,56 +523,95 @@ try{const s=localStorage.getItem('nexus_user');if(s){cu=JSON.parse(s);sp=cu.plan
 (async()=>{
   try{
     const{initializeApp}=await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js');
-    const{getAuth,createUserWithEmailAndPassword,signInWithEmailAndPassword,signInWithPopup,signInWithRedirect,getRedirectResult,GoogleAuthProvider,onAuthStateChanged,signOut}=await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js');
+    const{getAuth,createUserWithEmailAndPassword,signInWithEmailAndPassword,signInWithRedirect,getRedirectResult,GoogleAuthProvider,onAuthStateChanged,signOut}=await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js');
     const{getFirestore,doc,setDoc,getDoc,updateDoc}=await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js');
-    const app=initializeApp({apiKey:"AIzaSyDWs6ocXH2uuPXedt9pI6njkmRGqVhuf04",authDomain:"nexus-ai-ac207.firebaseapp.com",projectId:"nexus-ai-ac207",storageBucket:"nexus-ai-ac207.firebasestorage.app",messagingSenderId:"306814240505",appId:"1:306814240505:web:2a57dea5b31d7fc85fc428"});
-    const auth=getAuth(app),db=getFirestore(app),gp=new GoogleAuthProvider();
 
+    const app=initializeApp({
+      apiKey:"AIzaSyDWs6ocXH2uuPXedt9pI6njkmRGqVhuf04",
+      authDomain:"nexus-ai-ac207.firebaseapp.com",
+      projectId:"nexus-ai-ac207",
+      storageBucket:"nexus-ai-ac207.firebasestorage.app",
+      messagingSenderId:"306814240505",
+      appId:"1:306814240505:web:2a57dea5b31d7fc85fc428"
+    });
+
+    const auth=getAuth(app), db=getFirestore(app), gp=new GoogleAuthProvider();
+
+    // Funzione per salvare utente e andare alla chat
+    async function handleUser(user){
+      try{
+        const s=await getDoc(doc(db,'users',user.uid));
+        const d=s.exists()?s.data():{};
+        if(!s.exists()){
+          await setDoc(doc(db,'users',user.uid),{
+            name:user.displayName||'Utente',
+            email:user.email,
+            plan:'free',
+            msgCount:0,
+            createdAt:new Date().toISOString()
+          });
+        }
+        const userData={
+          name:d.name||user.displayName||'Utente',
+          email:user.email,
+          plan:d.plan||'free',
+          msgCount:d.msgCount||0,
+          uid:user.uid
+        };
+        localStorage.setItem('nexus_user',JSON.stringify(userData));
+        if(window._setUser) window._setUser(userData);
+      }catch(e){
+        console.warn('Firestore error:',e);
+        const userData={name:user.displayName||'Utente',email:user.email,plan:'free',msgCount:0,uid:user.uid};
+        localStorage.setItem('nexus_user',JSON.stringify(userData));
+        if(window._setUser) window._setUser(userData);
+      }
+    }
+
+    // PRIMA COSA: controlla se stiamo tornando da un redirect Google
+    try{
+      const result=await getRedirectResult(auth);
+      if(result && result.user){
+        console.log('Redirect Google rilevato:', result.user.displayName);
+        await handleUser(result.user);
+      }
+    }catch(e){ console.warn('getRedirectResult error:',e.message); }
+
+    // Esponi le funzioni
     window.fbLogin=(em,pw)=>signInWithEmailAndPassword(auth,em,pw);
 
     window.fbRegister=async(em,pw,name)=>{
       const cred=await createUserWithEmailAndPassword(auth,em,pw);
-      await setDoc(doc(db,'users',cred.user.uid),{name,email:em,plan:window._sp||'free',msgCount:0,createdAt:new Date().toISOString()});
+      await setDoc(doc(db,'users',cred.user.uid),{
+        name,email:em,plan:window._sp||'free',msgCount:0,createdAt:new Date().toISOString()
+      });
       return cred;
     };
 
     window.fbGoogleLogin=async()=>{
       await signInWithRedirect(auth,gp);
-      // onAuthStateChanged gestisce il risultato dopo il redirect
     };
 
-    // Gestisci il risultato del redirect Google
-    try {
-      const result = await getRedirectResult(auth);
-      if(result && result.user){
-        const s=await getDoc(doc(db,'users',result.user.uid));
-        if(!s.exists()) await setDoc(doc(db,'users',result.user.uid),{name:result.user.displayName||'Utente',email:result.user.email,plan:'free',msgCount:0,createdAt:new Date().toISOString()});
-      }
-    } catch(e){ console.warn('Redirect result error:', e.message); }
-
     window.fbLogout=()=>signOut(auth);
-    window.fbUpdateMsgCount=async(uid,cnt)=>{try{await updateDoc(doc(db,'users',uid),{msgCount:cnt});}catch(e){}};
 
-    onAuthStateChanged(auth,async user=>{
+    window.fbUpdateMsgCount=async(uid,cnt)=>{
+      try{await updateDoc(doc(db,'users',uid),{msgCount:cnt});}catch(e){}
+    };
+
+    // Ascolta cambio stato auth (per email/password login)
+    onAuthStateChanged(auth, async user=>{
       if(user){
-        try{
-          const s=await getDoc(doc(db,'users',user.uid));
-          const d=s.exists()?s.data():{};
-          // Usa window._setUser per aggiornare lo stato principale
-          const userData={name:d.name||user.displayName||'Utente',email:user.email,plan:d.plan||'free',msgCount:d.msgCount||0,uid:user.uid};
-          localStorage.setItem('nexus_user',JSON.stringify(userData));
-          if(window._setUser) window._setUser(userData);
-        }catch(e){
-          console.warn('Firestore:',e);
-          // Anche se Firestore fallisce, fai il login con i dati base
-          const userData={name:user.displayName||'Utente',email:user.email,plan:'free',msgCount:0,uid:user.uid};
-          localStorage.setItem('nexus_user',JSON.stringify(userData));
-          if(window._setUser) window._setUser(userData);
-        }
+        // Controlla se l utente e gia nella chat (evita loop)
+        const chatPage=document.getElementById('chatPage');
+        if(chatPage && chatPage.classList.contains('active')) return;
+        await handleUser(user);
       }
     });
+
     console.log('Firebase OK');
-  }catch(e){console.warn('Firebase offline:',e.message);}
+  }catch(e){
+    console.warn('Firebase offline:',e.message);
+  }
 })();
 </script>
 
