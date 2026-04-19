@@ -1,0 +1,1212 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NEXUS AI — Super Assistente</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:ital,wght@0,300;0,400;1,300&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg: #06090d;
+  --surface: #0d1117;
+  --surface2: #161b22;
+  --border: #21262d;
+  --border2: #30363d;
+  --accent: #00d4ff;
+  --accent2: #ff6b35;
+  --accent3: #7c3aed;
+  --gold: #f5c842;
+  --green: #22c55e;
+  --text: #e6edf3;
+  --text-dim: #7d8590;
+  --text-muted: #484f58;
+  --glow: 0 0 24px rgba(0,212,255,0.15);
+  --glow-gold: 0 0 24px rgba(245,200,66,0.2);
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'DM Mono', monospace;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* BG */
+.bg-grid {
+  position: fixed; inset: 0; z-index: 0; pointer-events: none;
+  background-image: linear-gradient(rgba(0,212,255,0.025) 1px, transparent 1px),
+                    linear-gradient(90deg, rgba(0,212,255,0.025) 1px, transparent 1px);
+  background-size: 48px 48px;
+}
+.bg-glow {
+  position: fixed; inset: 0; z-index: 0; pointer-events: none;
+  background: radial-gradient(ellipse at 70% 10%, rgba(0,212,255,0.05) 0%, transparent 55%),
+              radial-gradient(ellipse at 10% 90%, rgba(124,58,237,0.05) 0%, transparent 55%);
+  animation: bgAnim 10s ease-in-out infinite alternate;
+}
+@keyframes bgAnim { from { opacity:.6 } to { opacity:1 } }
+
+/* PAGES */
+.page { display: none; position: relative; z-index: 1; }
+.page.active { display: flex; }
+
+/* ======================== LANDING ======================== */
+#landingPage {
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+nav {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 18px 48px;
+  border-bottom: 1px solid var(--border);
+  background: rgba(6,9,13,0.85);
+  backdrop-filter: blur(20px);
+  position: sticky; top: 0; z-index: 100;
+}
+
+.nav-logo {
+  display: flex; align-items: center; gap: 12px;
+  font-family: 'Syne', sans-serif; font-weight: 800;
+  font-size: 22px; letter-spacing: 3px;
+  background: linear-gradient(90deg, var(--accent), var(--accent3));
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+}
+
+.nav-logo .hex {
+  width: 34px; height: 34px; border: 1.5px solid var(--accent);
+  border-radius: 8px; display: flex; align-items: center; justify-content: center;
+  font-size: 16px; color: var(--accent); box-shadow: var(--glow);
+  animation: spin 12s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg) } }
+
+.nav-links { display: flex; gap: 8px; }
+.btn { padding: 9px 20px; border-radius: 8px; font-family: 'DM Mono', monospace;
+  font-size: 12px; letter-spacing: 1px; cursor: pointer; transition: all .2s; border: none; }
+.btn-ghost { background: transparent; border: 1px solid var(--border2); color: var(--text-dim); }
+.btn-ghost:hover { border-color: var(--accent); color: var(--accent); }
+.btn-primary { background: linear-gradient(135deg, var(--accent), var(--accent3));
+  color: #fff; font-weight: 600; box-shadow: 0 0 20px rgba(0,212,255,0.2); }
+.btn-primary:hover { transform: translateY(-1px); box-shadow: 0 0 30px rgba(0,212,255,0.35); }
+
+/* HERO */
+.hero {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  text-align: center; padding: 100px 40px 80px;
+  flex: 1;
+}
+
+.hero-badge {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 6px 16px; border: 1px solid rgba(0,212,255,0.3);
+  border-radius: 20px; font-size: 10px; letter-spacing: 2px;
+  color: var(--accent); margin-bottom: 28px;
+  background: rgba(0,212,255,0.05);
+  animation: fadeUp .6s ease;
+}
+
+.hero-badge .dot { width:6px; height:6px; border-radius:50%;
+  background: var(--green); box-shadow: 0 0 8px var(--green);
+  animation: blink 2s ease-in-out infinite; }
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:.3} }
+
+.hero h1 {
+  font-family: 'Syne', sans-serif; font-weight: 800;
+  font-size: clamp(42px, 7vw, 82px); line-height: 1.05;
+  letter-spacing: -1px; margin-bottom: 24px;
+  animation: fadeUp .6s .1s ease both;
+}
+.hero h1 span {
+  background: linear-gradient(90deg, var(--accent), var(--accent3), var(--accent2));
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+}
+.hero p {
+  font-size: 15px; color: var(--text-dim); max-width: 480px;
+  line-height: 1.8; margin-bottom: 40px;
+  animation: fadeUp .6s .2s ease both;
+}
+.hero-cta { display: flex; gap: 14px; animation: fadeUp .6s .3s ease both; }
+
+@keyframes fadeUp { from{opacity:0;transform:translateY(16px)} to{opacity:1;transform:none} }
+
+/* PRICING */
+.pricing-section {
+  padding: 80px 48px;
+  display: flex; flex-direction: column; align-items: center;
+}
+.section-label {
+  font-size: 10px; letter-spacing: 3px; color: var(--accent);
+  text-transform: uppercase; margin-bottom: 12px;
+}
+.section-title {
+  font-family: 'Syne', sans-serif; font-weight: 800;
+  font-size: 36px; text-align: center; margin-bottom: 8px;
+}
+.section-sub { color: var(--text-dim); font-size: 13px; margin-bottom: 52px; }
+
+.plans {
+  display: grid; grid-template-columns: repeat(3, 1fr);
+  gap: 20px; max-width: 920px; width: 100%;
+}
+
+.plan {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 16px; padding: 32px 28px;
+  display: flex; flex-direction: column; gap: 0;
+  transition: transform .2s, box-shadow .2s;
+  position: relative; overflow: hidden;
+}
+.plan:hover { transform: translateY(-4px); }
+
+.plan.popular {
+  border-color: var(--accent); box-shadow: var(--glow);
+}
+.plan.plus {
+  border-color: var(--gold); box-shadow: var(--glow-gold);
+}
+
+.plan-badge {
+  position: absolute; top: 16px; right: 16px;
+  font-size: 9px; padding: 3px 10px; border-radius: 12px;
+  letter-spacing: 1.5px; font-weight: 600;
+}
+.plan.popular .plan-badge { background: rgba(0,212,255,0.15); color: var(--accent); }
+.plan.plus .plan-badge { background: rgba(245,200,66,0.15); color: var(--gold); }
+
+.plan-name {
+  font-family: 'Syne', sans-serif; font-weight: 700;
+  font-size: 18px; letter-spacing: 2px; margin-bottom: 6px;
+}
+.plan.popular .plan-name { color: var(--accent); }
+.plan.plus .plan-name { color: var(--gold); }
+
+.plan-price {
+  font-family: 'Syne', sans-serif; font-weight: 800;
+  font-size: 38px; margin-bottom: 4px;
+}
+.plan-price span { font-size: 14px; color: var(--text-dim); font-weight: 400; }
+.plan-desc { font-size: 11px; color: var(--text-dim); margin-bottom: 28px; }
+
+.plan-features { list-style: none; display: flex; flex-direction: column; gap: 12px; flex: 1; margin-bottom: 28px; }
+.plan-features li { font-size: 12px; color: var(--text-dim); display: flex; align-items: center; gap: 10px; }
+.plan-features li::before { content: '✓'; color: var(--green); font-weight: 700; flex-shrink: 0; }
+.plan-features li.no::before { content: '✕'; color: var(--text-muted); }
+.plan-features li.no { color: var(--text-muted); }
+
+.plan-btn {
+  width: 100%; padding: 12px; border-radius: 10px;
+  font-family: 'DM Mono', monospace; font-size: 12px;
+  letter-spacing: 1px; cursor: pointer; transition: all .2s; border: none;
+}
+.plan-btn.free { background: var(--surface2); border: 1px solid var(--border2); color: var(--text-dim); }
+.plan-btn.free:hover { border-color: var(--text-dim); color: var(--text); }
+.plan-btn.pro { background: linear-gradient(135deg, rgba(0,212,255,.15), rgba(124,58,237,.15));
+  border: 1px solid rgba(0,212,255,.4); color: var(--accent); font-weight: 600; }
+.plan-btn.pro:hover { background: rgba(0,212,255,.2); box-shadow: var(--glow); }
+.plan-btn.plus-btn { background: linear-gradient(135deg, rgba(245,200,66,.15), rgba(255,107,53,.1));
+  border: 1px solid rgba(245,200,66,.4); color: var(--gold); font-weight: 600; }
+.plan-btn.plus-btn:hover { background: rgba(245,200,66,.2); box-shadow: var(--glow-gold); }
+
+/* ======================== AUTH PAGE ======================== */
+#authPage {
+  min-height: 100vh; align-items: center; justify-content: center;
+  padding: 40px 20px;
+}
+
+.auth-card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 20px; padding: 44px 40px;
+  width: 100%; max-width: 420px;
+  animation: fadeUp .4s ease;
+}
+
+.auth-logo {
+  text-align: center; margin-bottom: 32px;
+}
+.auth-logo h2 {
+  font-family: 'Syne', sans-serif; font-weight: 800;
+  font-size: 26px; letter-spacing: 3px;
+  background: linear-gradient(90deg, var(--accent), var(--accent3));
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+}
+.auth-logo p { font-size: 11px; color: var(--text-dim); margin-top: 4px; letter-spacing: 1px; }
+
+.auth-tabs {
+  display: flex; gap: 4px; background: var(--surface2);
+  padding: 4px; border-radius: 10px; margin-bottom: 28px;
+}
+.auth-tab {
+  flex: 1; padding: 9px; text-align: center; font-size: 11px;
+  letter-spacing: 1px; cursor: pointer; border-radius: 8px;
+  color: var(--text-dim); transition: all .2s;
+}
+.auth-tab.active { background: var(--border2); color: var(--text); }
+
+.social-btns { display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; }
+.social-btn {
+  display: flex; align-items: center; justify-content: center; gap: 10px;
+  padding: 12px; border-radius: 10px; font-size: 12px; letter-spacing: .5px;
+  cursor: pointer; transition: all .2s; border: 1px solid var(--border2);
+  background: var(--surface2); color: var(--text-dim); font-family: 'DM Mono', monospace;
+}
+.social-btn:hover { border-color: var(--text-dim); color: var(--text); background: var(--border); }
+.social-btn .icon { font-size: 16px; }
+
+.divider {
+  display: flex; align-items: center; gap: 12px;
+  color: var(--text-muted); font-size: 10px; letter-spacing: 1px; margin-bottom: 20px;
+}
+.divider::before, .divider::after {
+  content: ''; flex: 1; height: 1px; background: var(--border);
+}
+
+.form-group { margin-bottom: 14px; }
+.form-label { font-size: 10px; color: var(--text-dim); letter-spacing: 1.5px; margin-bottom: 6px; display: block; }
+.form-input {
+  width: 100%; padding: 11px 14px; background: var(--surface2);
+  border: 1px solid var(--border2); border-radius: 8px;
+  color: var(--text); font-family: 'DM Mono', monospace; font-size: 13px;
+  outline: none; transition: border-color .2s, box-shadow .2s;
+}
+.form-input:focus { border-color: var(--accent); box-shadow: var(--glow); }
+.form-input::placeholder { color: var(--text-muted); }
+
+.btn-auth {
+  width: 100%; padding: 13px; margin-top: 8px;
+  background: linear-gradient(135deg, var(--accent), var(--accent3));
+  border: none; border-radius: 10px; color: #fff;
+  font-family: 'DM Mono', monospace; font-size: 13px;
+  font-weight: 600; letter-spacing: 1px; cursor: pointer;
+  transition: all .2s; box-shadow: 0 0 20px rgba(0,212,255,.2);
+}
+.btn-auth:hover { transform: translateY(-1px); box-shadow: 0 0 30px rgba(0,212,255,.35); }
+
+.auth-footer { text-align: center; font-size: 11px; color: var(--text-muted); margin-top: 20px; }
+.auth-footer a { color: var(--accent); cursor: pointer; text-decoration: none; }
+
+/* Plan indicator on auth */
+.selected-plan-badge {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 14px; border-radius: 10px; margin-bottom: 20px;
+  font-size: 11px; letter-spacing: .5px;
+}
+.selected-plan-badge.free { background: rgba(34,197,94,.05); border: 1px solid rgba(34,197,94,.2); color: #22c55e; }
+.selected-plan-badge.pro { background: rgba(0,212,255,.05); border: 1px solid rgba(0,212,255,.2); color: var(--accent); }
+.selected-plan-badge.plus { background: rgba(245,200,66,.05); border: 1px solid rgba(245,200,66,.2); color: var(--gold); }
+
+/* ======================== CHAT PAGE ======================== */
+#chatPage {
+  flex-direction: column;
+  height: 100vh;
+}
+
+.chat-nav {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 14px 24px;
+  border-bottom: 1px solid var(--border);
+  background: rgba(6,9,13,0.9); backdrop-filter: blur(20px);
+  position: relative; z-index: 10;
+}
+
+.chat-nav-left { display: flex; align-items: center; gap: 14px; }
+.chat-nav-logo {
+  font-family: 'Syne', sans-serif; font-weight: 800;
+  font-size: 18px; letter-spacing: 3px;
+  background: linear-gradient(90deg, var(--accent), var(--accent3));
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+}
+
+.user-info { display: flex; align-items: center; gap: 10px; }
+.user-avatar {
+  width: 32px; height: 32px; border-radius: 8px;
+  background: linear-gradient(135deg, rgba(0,212,255,.2), rgba(124,58,237,.2));
+  border: 1px solid rgba(0,212,255,.3);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 13px; color: var(--accent);
+}
+.user-name { font-size: 12px; color: var(--text-dim); }
+
+.plan-chip {
+  font-size: 9px; padding: 3px 10px; border-radius: 12px;
+  letter-spacing: 1.5px; font-weight: 600;
+}
+.plan-chip.free { background: rgba(34,197,94,.1); color: var(--green); border: 1px solid rgba(34,197,94,.2); }
+.plan-chip.pro { background: rgba(0,212,255,.1); color: var(--accent); border: 1px solid rgba(0,212,255,.2); }
+.plan-chip.plus { background: rgba(245,200,66,.1); color: var(--gold); border: 1px solid rgba(245,200,66,.2); }
+
+.msg-counter {
+  font-size: 10px; color: var(--text-muted); letter-spacing: .5px;
+}
+.msg-counter span { color: var(--accent); }
+
+/* Chat messages */
+#chatMessages {
+  flex: 1; overflow-y: auto; padding: 28px 0; scroll-behavior: smooth;
+}
+#chatMessages::-webkit-scrollbar { width: 3px; }
+#chatMessages::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+.msg-row { display: flex; padding: 8px 24px; gap: 14px; animation: fadeUp .3s ease; }
+.msg-row.user { flex-direction: row-reverse; }
+
+.msg-avatar {
+  width: 30px; height: 30px; border-radius: 7px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 12px; flex-shrink: 0; margin-top: 2px;
+}
+.msg-avatar.ai { background: linear-gradient(135deg,rgba(0,212,255,.12),rgba(124,58,237,.12));
+  border: 1px solid rgba(0,212,255,.25); color: var(--accent); }
+.msg-avatar.usr { background: linear-gradient(135deg,rgba(255,107,53,.12),rgba(255,107,53,.05));
+  border: 1px solid rgba(255,107,53,.25); color: var(--accent2); }
+
+.msg-bubble {
+  max-width: 68%; padding: 13px 17px; border-radius: 12px;
+  font-size: 13px; line-height: 1.75;
+}
+.msg-bubble.ai { background: var(--surface); border: 1px solid var(--border); border-top-left-radius: 4px; }
+.msg-bubble.user { background: rgba(0,212,255,.06); border: 1px solid rgba(0,212,255,.15); border-top-right-radius: 4px; }
+
+.msg-label { font-size: 9px; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 7px; }
+.msg-bubble.ai .msg-label { color: var(--accent); }
+.msg-bubble.user .msg-label { color: var(--accent2); }
+
+/* Welcome chat */
+.chat-welcome {
+  display: flex; flex-direction: column; align-items: center;
+  justify-content: center; height: 100%; text-align: center; padding: 40px;
+}
+.chat-welcome .w-icon { font-size: 44px; margin-bottom: 16px; filter: drop-shadow(0 0 20px rgba(0,212,255,.3)); animation: spin 14s linear infinite; }
+.chat-welcome h2 { font-family: 'Syne',sans-serif; font-weight: 800; font-size: 28px; letter-spacing: 2px;
+  background: linear-gradient(90deg,var(--accent),var(--accent3)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; margin-bottom: 10px; }
+.chat-welcome p { color: var(--text-dim); font-size: 12px; max-width: 380px; line-height: 1.7; margin-bottom: 28px; }
+
+.chips { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; max-width: 520px; }
+.chip {
+  padding: 8px 14px; border: 1px solid var(--border2); border-radius: 20px;
+  font-size: 11px; color: var(--text-dim); cursor: pointer; transition: all .2s;
+  background: var(--surface);
+}
+.chip:hover { border-color: var(--accent); color: var(--accent); box-shadow: 0 0 10px rgba(0,212,255,.1); }
+
+/* LIMIT BANNER */
+.limit-banner {
+  margin: 0 24px 12px; padding: 12px 16px;
+  background: rgba(255,107,53,.05); border: 1px solid rgba(255,107,53,.25);
+  border-radius: 10px; font-size: 12px; color: var(--accent2);
+  display: flex; align-items: center; gap: 10px; animation: fadeUp .3s ease;
+}
+.limit-banner a { color: var(--gold); cursor: pointer; text-decoration: underline; }
+.hidden { display: none !important; }
+
+/* TYPING */
+.typing-indicator { display: flex; align-items: center; gap: 5px; padding: 12px 0 4px; }
+.typing-indicator span { width: 6px; height: 6px; border-radius: 50%; background: var(--accent); animation: bounce 1.2s ease-in-out infinite; }
+.typing-indicator span:nth-child(2) { animation-delay: .2s; }
+.typing-indicator span:nth-child(3) { animation-delay: .4s; }
+@keyframes bounce { 0%,80%,100%{transform:scale(.6);opacity:.3} 40%{transform:scale(1);opacity:1} }
+
+/* INPUT */
+.chat-input-area {
+  padding: 14px 24px 18px;
+  background: rgba(6,9,13,.95); backdrop-filter: blur(20px);
+  border-top: 1px solid var(--border); position: relative; z-index: 10;
+}
+
+.api-notice {
+  background: var(--surface); border: 1px solid rgba(245,200,66,.25);
+  border-radius: 10px; padding: 12px 16px; margin-bottom: 12px;
+  display: flex; align-items: center; gap: 10px; font-size: 11px; color: var(--text-dim);
+}
+.api-notice strong { color: var(--gold); }
+
+.api-key-row { display: flex; gap: 8px; margin-bottom: 12px; }
+.api-key-input {
+  flex: 1; padding: 10px 14px; background: var(--surface2);
+  border: 1px solid var(--border2); border-radius: 8px;
+  color: var(--text); font-family: 'DM Mono',monospace; font-size: 12px;
+  outline: none; transition: border-color .2s;
+}
+.api-key-input:focus { border-color: var(--accent); }
+.api-key-input::placeholder { color: var(--text-muted); }
+.btn-save-key {
+  padding: 10px 16px; background: rgba(0,212,255,.1); border: 1px solid rgba(0,212,255,.3);
+  border-radius: 8px; color: var(--accent); font-family: 'DM Mono',monospace;
+  font-size: 11px; letter-spacing: 1px; cursor: pointer; white-space: nowrap; transition: all .2s;
+}
+.btn-save-key:hover { background: rgba(0,212,255,.2); }
+
+.input-row { display: flex; gap: 10px; align-items: flex-end; }
+#msgInput {
+  flex: 1; background: var(--surface2); border: 1px solid var(--border2);
+  border-radius: 12px; padding: 12px 16px; color: var(--text);
+  font-family: 'DM Mono',monospace; font-size: 13px;
+  outline: none; resize: none; min-height: 46px; max-height: 120px;
+  transition: border-color .2s, box-shadow .2s; line-height: 1.5;
+}
+#msgInput:focus { border-color: var(--accent); box-shadow: var(--glow); }
+#msgInput::placeholder { color: var(--text-muted); }
+
+#sendMsgBtn {
+  width: 46px; height: 46px; border-radius: 12px;
+  background: linear-gradient(135deg, var(--accent), var(--accent3));
+  border: none; cursor: pointer; display: flex; align-items: center;
+  justify-content: center; font-size: 17px; color: #fff;
+  transition: all .2s; box-shadow: 0 0 20px rgba(0,212,255,.2); flex-shrink: 0;
+}
+#sendMsgBtn:hover { transform: scale(1.06); box-shadow: 0 0 30px rgba(0,212,255,.4); }
+#sendMsgBtn:disabled { opacity:.35; cursor:not-allowed; transform:none; }
+
+.input-hint { font-size: 9px; color: var(--text-muted); text-align: center; margin-top: 8px; letter-spacing: .5px; }
+
+/* Code */
+pre { background:#0a0f14; border:1px solid var(--border); border-radius:8px; padding:14px; overflow-x:auto; margin:10px 0; font-size:12px; line-height:1.6; }
+code { color: var(--accent); font-family:'DM Mono',monospace; font-size:12px; }
+pre code { color:#7dd3fc; }
+strong { color: var(--accent); }
+em { color: var(--accent2); font-style:normal; }
+
+/* FILE ATTACHMENT */
+.attach-btn {
+  width: 46px; height: 46px; border-radius: 12px; flex-shrink: 0;
+  background: var(--surface2); border: 1px solid var(--border2);
+  cursor: pointer; display: flex; align-items: center; justify-content: center;
+  font-size: 18px; transition: all .2s; color: var(--text-dim);
+}
+.attach-btn:hover { border-color: var(--accent); color: var(--accent); box-shadow: 0 0 12px rgba(0,212,255,0.1); }
+
+.file-preview {
+  display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+  padding: 10px 0; margin-bottom: 8px;
+}
+.file-chip {
+  display: flex; align-items: center; gap: 8px;
+  padding: 6px 12px; background: var(--surface2);
+  border: 1px solid rgba(0,212,255,0.25); border-radius: 8px;
+  font-size: 11px; color: var(--accent); position: relative;
+  max-width: 200px; animation: fadeUp .2s ease;
+}
+.file-chip .fname { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 130px; }
+.file-chip .fsize { color: var(--text-muted); font-size: 9px; }
+.file-chip .fremove {
+  width: 16px; height: 16px; border-radius: 50%; background: rgba(255,107,53,0.2);
+  color: var(--accent2); font-size: 10px; display: flex; align-items: center;
+  justify-content: center; cursor: pointer; flex-shrink: 0; transition: all .15s;
+}
+.file-chip .fremove:hover { background: rgba(255,107,53,0.4); }
+
+.file-bubble {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 14px; background: rgba(0,212,255,0.05);
+  border: 1px solid rgba(0,212,255,0.2); border-radius: 10px;
+  margin-bottom: 8px; font-size: 12px;
+}
+.file-bubble .ficon { font-size: 20px; }
+.file-bubble .finfo .fname { font-weight: 600; color: var(--text); }
+.file-bubble .finfo .fmeta { font-size: 10px; color: var(--text-dim); margin-top: 2px; }
+
+/* IMAGE PREVIEW in bubble */
+.img-preview { max-width: 280px; max-height: 200px; border-radius: 10px; margin-top: 8px; border: 1px solid var(--border); }
+
+@media (max-width: 700px) {
+  nav { padding: 14px 20px; }
+  .plans { grid-template-columns: 1fr; }
+  .pricing-section { padding: 60px 20px; }
+  .hero { padding: 60px 20px 50px; }
+  .hero-cta { flex-direction: column; align-items: center; }
+  .auth-card { padding: 32px 24px; }
+}
+</style>
+
+  <!-- FIREBASE SDK -->
+  <script type="module">
+    import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+    import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signInWithPopup, GoogleAuthProvider, RecaptchaVerifier, signInWithPhoneNumber, onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
+    import { getFirestore, doc, setDoc, getDoc, updateDoc } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyDWs6ocXH2uuPXedt9pI6njkmRGqVhuf04",
+      authDomain: "nexus-ai-ac207.firebaseapp.com",
+      projectId: "nexus-ai-ac207",
+      storageBucket: "nexus-ai-ac207.firebasestorage.app",
+      messagingSenderId: "306814240505",
+      appId: "1:306814240505:web:2a57dea5b31d7fc85fc428"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+    const googleProvider = new GoogleAuthProvider();
+
+    // Make available globally
+    window.fbAuth = auth;
+    window.fbDb = db;
+    window.fbGoogleProvider = googleProvider;
+    window.fbFunctions = {
+      createUserWithEmailAndPassword,
+      signInWithEmailAndPassword,
+      signInWithPopup,
+      RecaptchaVerifier,
+      signInWithPhoneNumber,
+      onAuthStateChanged,
+      signOut,
+      doc, setDoc, getDoc, updateDoc
+    };
+
+    // Auth state listener
+    onAuthStateChanged(auth, async (user) => {
+      if (user) {
+        // User is signed in - load their data from Firestore
+        try {
+          const snap = await getDoc(doc(db, 'users', user.uid));
+          if (snap.exists()) {
+            const data = snap.data();
+            window.currentUser = { 
+              name: data.name || user.displayName || 'Utente',
+              email: user.email,
+              plan: data.plan || 'free',
+              msgCount: data.msgCount || 0,
+              uid: user.uid
+            };
+          } else {
+            // New user - create record
+            const newUser = { name: user.displayName || 'Utente', email: user.email, plan: 'free', msgCount: 0, createdAt: new Date().toISOString() };
+            await setDoc(doc(db, 'users', user.uid), newUser);
+            window.currentUser = { ...newUser, uid: user.uid };
+          }
+          localStorage.setItem('nexus_user', JSON.stringify(window.currentUser));
+          if (window.initChat) window.initChat();
+          if (window.showPage) window.showPage('chatPage');
+        } catch(e) { console.error('Firestore error:', e); }
+      }
+    });
+
+    // Firebase Auth functions exposed globally
+    window.fbLogin = async (email, password) => {
+      return signInWithEmailAndPassword(auth, email, password);
+    };
+
+    window.fbRegister = async (email, password, name) => {
+      const cred = await createUserWithEmailAndPassword(auth, email, password);
+      await setDoc(doc(db, 'users', cred.user.uid), {
+        name, email, plan: window.selectedPlan || 'free',
+        msgCount: 0, createdAt: new Date().toISOString()
+      });
+      return cred;
+    };
+
+    window.fbGoogleLogin = async () => {
+      const result = await signInWithPopup(auth, googleProvider);
+      const snap = await getDoc(doc(db, 'users', result.user.uid));
+      if (!snap.exists()) {
+        await setDoc(doc(db, 'users', result.user.uid), {
+          name: result.user.displayName || 'Utente Google',
+          email: result.user.email, plan: window.selectedPlan || 'free',
+          msgCount: 0, createdAt: new Date().toISOString()
+        });
+      }
+      return result;
+    };
+
+    window.fbLogout = () => signOut(auth);
+
+    window.fbUpdateMsgCount = async (uid, count) => {
+      try { await updateDoc(doc(db, 'users', uid), { msgCount: count }); } catch(e) {}
+    };
+  <\/script>
+</head>
+<body>
+
+<div class="bg-grid"></div>
+<div class="bg-glow"></div>
+
+<!-- ============ LANDING PAGE ============ -->
+<div id="landingPage" class="page active">
+  <nav>
+    <div class="nav-logo">
+      <div class="hex">⬡</div>
+      NEXUS AI
+    </div>
+    <div class="nav-links">
+      <button class="btn btn-ghost" onclick="showAuth('login')">ACCEDI</button>
+      <button class="btn btn-primary" onclick="showAuth('register')">INIZIA GRATIS</button>
+    </div>
+  </nav>
+
+  <div class="hero">
+    <div class="hero-badge">
+      <div class="dot"></div>
+      SUPER ASSISTENTE AI · DISPONIBILE ORA
+    </div>
+    <h1>L'AI che <span>fa tutto</span><br>per te</h1>
+    <p>Codice, siti web, testi, analisi, risposte. NEXUS AI unisce la potenza dell'intelligenza artificiale più avanzata in un unico strumento professionale.</p>
+    <div class="hero-cta">
+      <button class="btn btn-primary" onclick="showAuth('register')" style="padding:14px 32px;font-size:13px;">INIZIA GRATIS →</button>
+      <button class="btn btn-ghost" onclick="document.getElementById('pricing').scrollIntoView({behavior:'smooth'})" style="padding:14px 24px;font-size:13px;">VEDI I PIANI</button>
+    </div>
+  </div>
+
+  <!-- PRICING -->
+  <div class="pricing-section" id="pricing">
+    <div class="section-label">PIANI & PREZZI</div>
+    <h2 class="section-title">Scegli il tuo piano</h2>
+    <p class="section-sub">Inizia gratis, passa a Pro o Plus quando vuoi</p>
+
+    <div class="plans">
+      <!-- FREE -->
+      <div class="plan">
+        <div class="plan-name">FREE</div>
+        <div class="plan-price">€0 <span>/mese</span></div>
+        <div class="plan-desc">Per provare NEXUS AI</div>
+        <ul class="plan-features">
+          <li>10 messaggi al giorno</li>
+          <li>Accesso a Claude base</li>
+          <li>Codice & testi semplici</li>
+          <li class="no">Risposte prioritarie</li>
+          <li class="no">Cronologia illimitata</li>
+          <li class="no">Supporto dedicato</li>
+        </ul>
+        <button class="plan-btn free" onclick="choosePlan('free')">INIZIA GRATIS</button>
+      </div>
+
+      <!-- PRO -->
+      <div class="plan popular">
+        <div class="plan-badge">PIÙ POPOLARE</div>
+        <div class="plan-name">PRO</div>
+        <div class="plan-price">€9.99 <span>/mese</span></div>
+        <div class="plan-desc">Per professionisti e freelance</div>
+        <ul class="plan-features">
+          <li>500 messaggi al mese</li>
+          <li>Claude Sonnet avanzato</li>
+          <li>Codice, siti, analisi</li>
+          <li>Risposte prioritarie</li>
+          <li>Cronologia illimitata</li>
+          <li class="no">Supporto dedicato</li>
+        </ul>
+        <button class="plan-btn pro" onclick="choosePlan('pro')">ATTIVA PRO →</button>
+      </div>
+
+      <!-- PLUS -->
+      <div class="plan plus">
+        <div class="plan-badge">PREMIUM</div>
+        <div class="plan-name">PLUS</div>
+        <div class="plan-price">€24.99 <span>/mese</span></div>
+        <div class="plan-desc">Per aziende e power user</div>
+        <ul class="plan-features">
+          <li>Messaggi illimitati</li>
+          <li>Claude Sonnet max power</li>
+          <li>Tutto quello che esiste</li>
+          <li>Risposte prioritarie</li>
+          <li>Cronologia illimitata</li>
+          <li>Supporto dedicato 24/7</li>
+        </ul>
+        <button class="plan-btn plus-btn" onclick="choosePlan('plus')">ATTIVA PLUS →</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ AUTH PAGE ============ -->
+<div id="authPage" class="page">
+  <div class="auth-card">
+    <div class="auth-logo">
+      <h2>⬡ NEXUS AI</h2>
+      <p>SUPER ASSISTENTE COMMERCIALE</p>
+    </div>
+
+    <div id="selectedPlanBadge" class="selected-plan-badge free">
+      <span>📦</span>
+      <span id="planBadgeText">Piano selezionato: FREE</span>
+    </div>
+
+    <div class="auth-tabs">
+      <div class="auth-tab active" id="tabRegister" onclick="switchTab('register')">REGISTRATI</div>
+      <div class="auth-tab" id="tabLogin" onclick="switchTab('login')">ACCEDI</div>
+    </div>
+
+    <div class="social-btns">
+      <button class="social-btn" onclick="socialAuth('google')">
+        <span class="icon">🌐</span> Continua con Google
+      </button>
+      <button class="social-btn" onclick="socialAuth('phone')">
+        <span class="icon">📱</span> Continua con Telefono
+      </button>
+    </div>
+
+    <div class="divider">OPPURE CON EMAIL</div>
+
+    <div id="nameField" class="form-group">
+      <label class="form-label">NOME COMPLETO</label>
+      <input class="form-input" id="authName" type="text" placeholder="Mario Rossi" />
+    </div>
+    <div class="form-group">
+      <label class="form-label">EMAIL</label>
+      <input class="form-input" id="authEmail" type="email" placeholder="mario@esempio.com" />
+    </div>
+    <div class="form-group">
+      <label class="form-label">PASSWORD</label>
+      <input class="form-input" id="authPassword" type="password" placeholder="••••••••" />
+    </div>
+
+    <button class="btn-auth" id="authSubmitBtn" onclick="doAuth()">CREA ACCOUNT →</button>
+
+    <div class="auth-footer">
+      Hai già un account? <a onclick="switchTab('login')">Accedi qui</a>
+    </div>
+  </div>
+</div>
+
+<!-- ============ CHAT PAGE ============ -->
+<div id="chatPage" class="page">
+  <div class="chat-nav">
+    <div class="chat-nav-left">
+      <div class="chat-nav-logo">⬡ NEXUS</div>
+      <div class="msg-counter" id="msgCounter">Messaggi: <span id="msgUsed">0</span> / <span id="msgLimit">10</span></div>
+    </div>
+    <div class="user-info">
+      <div class="user-avatar">◈</div>
+      <div>
+        <div class="user-name" id="chatUserName">Utente</div>
+        <div class="plan-chip free" id="chatPlanChip">FREE</div>
+      </div>
+      <button class="btn btn-ghost" style="font-size:10px;padding:6px 12px;" onclick="fbLogout().then(()=>{currentUser=null;showPage('landingPage');messages=[];})">ESCI</button>
+    </div>
+  </div>
+
+  <div id="chatMessages">
+    <div class="chat-welcome" id="chatWelcome">
+      <div class="w-icon">⬡</div>
+      <h2>Ciao! Sono NEXUS AI</h2>
+      <p>Sono pronto ad aiutarti con codice, siti web, testi, analisi e qualsiasi domanda tu abbia.</p>
+      <div class="chips">
+        <div class="chip" onclick="quickMsg('Crea un sito web per una pizzeria in HTML')">🍕 Sito web pizzeria</div>
+        <div class="chip" onclick="quickMsg('Scrivi un programma Python per calcolare le fatture')">🐍 Programma Python</div>
+        <div class="chip" onclick="quickMsg('Come funziona l\'intelligenza artificiale? Spiegami in modo semplice')">🤖 Cos\'è l\'AI?</div>
+        <div class="chip" onclick="quickMsg('Scrivi un discorso motivazionale di 3 minuti per un team aziendale')">🎤 Discorso motivazionale</div>
+        <div class="chip" onclick="quickMsg('Dammi 10 idee di business innovative per il 2025')">💡 Idee di business</div>
+        <div class="chip" onclick="quickMsg('Crea una landing page moderna in HTML e CSS per un\'app mobile')">💻 Landing page</div>
+      </div>
+    </div>
+  </div>
+
+  <div id="limitBanner" class="limit-banner hidden">
+    ⚠️ Hai raggiunto il limite giornaliero del piano FREE. <a onclick="showPage('landingPage');setTimeout(()=>document.getElementById('pricing').scrollIntoView({behavior:'smooth'}),300)">Passa a PRO →</a>
+  </div>
+
+  <div class="chat-input-area">
+    <div class="api-notice" id="apiNotice">
+      <strong>⚡ NEXUS AI</strong> — Inserisci la tua API key Anthropic per attivare l'AI (da console.anthropic.com)
+    </div>
+    <div class="api-key-row" id="apiKeyRow">
+      <input class="api-key-input" id="apiKeyField" type="password" placeholder="sk-ant-api03-..." />
+      <button class="btn-save-key" onclick="saveKey()">ATTIVA →</button>
+    </div>
+    <div id="filePreviewArea" class="file-preview" style="display:none;"></div>
+    <div class="input-row">
+      <button class="attach-btn" onclick="document.getElementById('fileInput').click()" title="Allega file">📎</button>
+      <input type="file" id="fileInput" style="display:none" multiple accept=".pdf,.doc,.docx,.txt,.md,.csv,.jpg,.jpeg,.png,.gif,.webp" onchange="handleFiles(this.files)">
+      <textarea id="msgInput" placeholder="Chiedimi qualsiasi cosa... o allega un file 📎" rows="1"
+        onkeydown="handleEnter(event)" oninput="autoH(this)"></textarea>
+      <button id="sendMsgBtn" onclick="sendMsg()" disabled>➤</button>
+    </div>
+    <div class="input-hint">INVIO per inviare · SHIFT+INVIO per andare a capo · 📎 per allegare file</div>
+  </div>
+</div>
+
+<script>
+// ============ STATE ============
+let currentUser = null;
+let selectedPlan = 'free';
+let apiKey = localStorage.getItem('nexus_key') || '';
+let messages = [];
+let loading = false;
+
+const PLANS = {
+  free:  { label: 'FREE',  limit: 10,   period: 'giorno',   chip: 'free' },
+  pro:   { label: 'PRO',   limit: 500,  period: 'mese',     chip: 'pro'  },
+  plus:  { label: 'PLUS',  limit: 99999,period: 'mese',     chip: 'plus' }
+};
+
+// ============ PAGE ROUTING ============
+window.showPage = function showPage {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  window.scrollTo(0,0);
+}
+
+// ============ LANDING ============
+function choosePlan(plan) {
+  selectedPlan = plan;
+  showAuth('register');
+}
+
+// ============ AUTH ============
+function showAuth(mode) {
+  showPage('authPage');
+  switchTab(mode);
+  updatePlanBadge();
+}
+
+function switchTab(tab) {
+  document.getElementById('tabRegister').classList.toggle('active', tab==='register');
+  document.getElementById('tabLogin').classList.toggle('active', tab==='login');
+  document.getElementById('nameField').style.display = tab==='register' ? 'block' : 'none';
+  document.getElementById('authSubmitBtn').textContent = tab==='register' ? 'CREA ACCOUNT →' : 'ACCEDI →';
+  document.querySelector('.auth-footer').innerHTML = tab==='register'
+    ? 'Hai già un account? <a onclick="switchTab(\'login\')">Accedi qui</a>'
+    : 'Non hai un account? <a onclick="switchTab(\'register\')">Registrati gratis</a>';
+}
+
+function updatePlanBadge() {
+  const badge = document.getElementById('selectedPlanBadge');
+  const text = document.getElementById('planBadgeText');
+  badge.className = `selected-plan-badge ${selectedPlan}`;
+  const labels = { free:'📦 Piano selezionato: FREE — Gratis', pro:'⚡ Piano selezionato: PRO — €9.99/mese', plus:'👑 Piano selezionato: PLUS — €24.99/mese' };
+  text.textContent = labels[selectedPlan];
+}
+
+async function socialAuth(type) {
+  if (type === 'google') {
+    try {
+      await window.fbGoogleLogin();
+      // onAuthStateChanged handles navigation
+    } catch(e) {
+      alert('Errore login Google: ' + e.message);
+    }
+  } else if (type === 'phone') {
+    const phone = prompt('Inserisci il numero di telefono con prefisso (es. +39 333 1234567):');
+    if (!phone) return;
+    try {
+      if (!window.recaptchaVerifier) {
+        window.recaptchaVerifier = new window.fbFunctions.RecaptchaVerifier(window.fbAuth, 'authSubmitBtn', { size: 'invisible' });
+      }
+      const confirmation = await window.fbFunctions.signInWithPhoneNumber(window.fbAuth, phone, window.recaptchaVerifier);
+      const code = prompt('Inserisci il codice SMS ricevuto:');
+      if (code) {
+        await confirmation.confirm(code);
+      }
+    } catch(e) {
+      alert('Errore login telefono: ' + e.message);
+    }
+  }
+}
+
+async function doAuth() {
+  const isLogin = document.getElementById('tabLogin').classList.contains('active');
+  const name = document.getElementById('authName').value.trim() || 'Utente';
+  const email = document.getElementById('authEmail').value.trim();
+  const password = document.getElementById('authPassword').value;
+  if (!email) { alert('Inserisci una email'); return; }
+  if (!password || password.length < 6) { alert('La password deve avere almeno 6 caratteri'); return; }
+  const btn = document.getElementById('authSubmitBtn');
+  btn.textContent = 'CARICAMENTO...'; btn.disabled = true;
+  try {
+    if (isLogin) {
+      await window.fbLogin(email, password);
+    } else {
+      await window.fbRegister(email, password, name);
+    }
+    // onAuthStateChanged handles the rest
+  } catch(e) {
+    btn.disabled = false;
+    btn.textContent = isLogin ? 'ACCEDI →' : 'CREA ACCOUNT →';
+    const msgs = {
+      'auth/email-already-in-use': 'Email già registrata. Prova ad accedere.',
+      'auth/user-not-found': 'Utente non trovato. Registrati prima.',
+      'auth/wrong-password': 'Password errata.',
+      'auth/invalid-email': 'Email non valida.',
+      'auth/weak-password': 'Password troppo debole (min 6 caratteri).',
+      'auth/invalid-credential': 'Email o password errati.'
+    };
+    alert(msgs[e.code] || 'Errore: ' + e.message);
+  }
+}
+
+function loginUser(name, email) {
+  currentUser = { name, email, plan: selectedPlan, msgCount: 0, lastReset: new Date().toDateString() };
+  localStorage.setItem('nexus_user', JSON.stringify(currentUser));
+  initChat();
+  showPage('chatPage');
+}
+
+// ============ CHAT ============
+window.initChat = function initChat {
+  if (!currentUser) return;
+  const plan = PLANS[currentUser.plan];
+
+  // Reset counter if new day (free) or new month (pro/plus)
+  document.getElementById('chatUserName').textContent = currentUser.name.split(' ')[0];
+  const chip = document.getElementById('chatPlanChip');
+  chip.textContent = plan.label;
+  chip.className = `plan-chip ${currentUser.plan}`;
+
+  updateCounter();
+
+  // API key
+  if (apiKey) {
+    document.getElementById('apiNotice').classList.add('hidden');
+    document.getElementById('apiKeyRow').classList.add('hidden');
+    document.getElementById('sendMsgBtn').disabled = false;
+  }
+}
+
+function updateCounter() {
+  const plan = PLANS[currentUser.plan];
+  const used = currentUser.msgCount || 0;
+  const limit = plan.limit >= 99999 ? '∞' : plan.limit;
+  document.getElementById('msgUsed').textContent = used;
+  document.getElementById('msgLimit').textContent = limit;
+
+  const atLimit = plan.limit < 99999 && used >= plan.limit;
+  document.getElementById('limitBanner').classList.toggle('hidden', !atLimit);
+  document.getElementById('sendMsgBtn').disabled = atLimit || !apiKey;
+}
+
+function saveKey() {
+  const val = document.getElementById('apiKeyField').value.trim();
+  if (!val.startsWith('sk-ant')) { alert('La key deve iniziare con sk-ant-...'); return; }
+  apiKey = val;
+  localStorage.setItem('nexus_key', apiKey);
+  document.getElementById('apiNotice').classList.add('hidden');
+  document.getElementById('apiKeyRow').classList.add('hidden');
+  document.getElementById('sendMsgBtn').disabled = false;
+  updateCounter();
+}
+
+function quickMsg(text) {
+  document.getElementById('msgInput').value = text;
+  sendMsg();
+}
+
+function autoH(el) { el.style.height='auto'; el.style.height=Math.min(el.scrollHeight,120)+'px'; }
+
+function handleEnter(e) {
+  if (e.key==='Enter' && !e.shiftKey) { e.preventDefault(); sendMsg(); }
+}
+
+function addBubble(role, content) {
+  const wrap = document.getElementById('chatMessages');
+  const welcome = document.getElementById('chatWelcome');
+  if (welcome) welcome.remove();
+
+  const row = document.createElement('div');
+  row.className = `msg-row ${role==='assistant'?'':'user'}`;
+
+  const av = document.createElement('div');
+  av.className = `msg-avatar ${role==='assistant'?'ai':'usr'}`;
+  av.textContent = role==='assistant' ? '⬡' : '◈';
+
+  const bubble = document.createElement('div');
+  bubble.className = `msg-bubble ${role==='assistant'?'ai':'user'}`;
+
+  const lbl = document.createElement('div');
+  lbl.className = 'msg-label';
+  lbl.textContent = role==='assistant' ? 'NEXUS AI' : 'TU';
+
+  const txt = document.createElement('div');
+  txt.innerHTML = fmt(content);
+
+  bubble.appendChild(lbl); bubble.appendChild(txt);
+  row.appendChild(av); row.appendChild(bubble);
+  wrap.appendChild(row);
+  wrap.scrollTop = wrap.scrollHeight;
+  return txt;
+}
+
+function fmt(t) {
+  t = t.replace(/```(\w+)?\n([\s\S]*?)```/g,'<pre><code>$2</code></pre>');
+  t = t.replace(/`([^`]+)`/g,'<code>$1</code>');
+  t = t.replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>');
+  t = t.replace(/\*(.*?)\*/g,'<em>$1</em>');
+  t = t.replace(/\n/g,'<br>');
+  return t;
+}
+
+function showTyping() {
+  const wrap = document.getElementById('chatMessages');
+  const row = document.createElement('div');
+  row.className = 'msg-row'; row.id = 'typingRow';
+  const av = document.createElement('div');
+  av.className = 'msg-avatar ai'; av.textContent = '⬡';
+  const bubble = document.createElement('div');
+  bubble.className = 'msg-bubble ai';
+  const lbl = document.createElement('div');
+  lbl.className = 'msg-label'; lbl.textContent = 'NEXUS AI';
+  const t = document.createElement('div');
+  t.className = 'typing-indicator';
+  t.innerHTML = '<span></span><span></span><span></span>';
+  bubble.appendChild(lbl); bubble.appendChild(t);
+  row.appendChild(av); row.appendChild(bubble);
+  wrap.appendChild(row);
+  wrap.scrollTop = wrap.scrollHeight;
+}
+
+async function sendMsg() {
+  if (loading || !apiKey || !currentUser) return;
+  const plan = PLANS[currentUser.plan];
+  if (plan.limit < 99999 && currentUser.msgCount >= plan.limit) return;
+
+  const input = document.getElementById('msgInput');
+  const text = input.value.trim();
+  if (!text) return;
+
+  input.value = ''; input.style.height = 'auto';
+  loading = true;
+  document.getElementById('sendMsgBtn').disabled = true;
+
+  // Build content with files
+  let msgContent = text;
+  let apiContent = [];
+
+  if(attachedFiles.length > 0){
+    showFilesInChat([...attachedFiles]);
+    attachedFiles.forEach(f=>{
+      if(f.dataUrl){
+        // Image file
+        apiContent.push({ type:'image', source:{ type:'base64', media_type:f.type, data:f.dataUrl.split(',')[1] } });
+      } else {
+        // Text/doc file
+        msgContent += '
+
+--- FILE: '+f.name+' ---
+'+f.content.substring(0,8000)+'
+--- FINE FILE ---';
+      }
+    });
+    attachedFiles = [];
+    renderPreviews();
+  }
+
+  if(text) {
+    if(apiContent.length>0){
+      apiContent.push({ type:'text', text: msgContent });
+    }
+    addBubble('user', text);
+  }
+
+  const userMsg = apiContent.length>0 ? { role:'user', content: apiContent } : { role:'user', content: msgContent };
+  messages.push(userMsg);
+
+  currentUser.msgCount = (currentUser.msgCount||0) + 1;
+  localStorage.setItem('nexus_user', JSON.stringify(currentUser));
+  if (currentUser.uid && window.fbUpdateMsgCount) window.fbUpdateMsgCount(currentUser.uid, currentUser.msgCount);
+  updateCounter();
+
+  showTyping();
+
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': apiKey,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true'
+      },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 2048,
+        system: `Sei NEXUS AI, un super assistente commerciale italiano. Piano attuale dell'utente: ${plan.label}. Nome utente: ${currentUser.name}. Sei esperto in programmazione, siti web, marketing, business, analisi e qualsiasi domanda. Rispondi sempre in italiano, in modo chiaro e professionale. Usa i blocchi di codice con i backtick tripli per il codice.`,
+        messages
+      })
+    });
+
+    const data = await res.json();
+    document.getElementById('typingRow')?.remove();
+
+    if (data.error) throw new Error(data.error.message);
+
+    const reply = data.content[0].text;
+    messages.push({ role:'assistant', content: reply });
+    addBubble('assistant', reply);
+
+  } catch(err) {
+    document.getElementById('typingRow')?.remove();
+    addBubble('assistant', `⚠️ **Errore:** ${err.message}`);
+  }
+
+  loading = false;
+  updateCounter();
+}
+
+
+// ============ FILE ATTACHMENT ============
+let attachedFiles = [];
+const FILE_ICONS = { pdf:'📄', doc:'📝', docx:'📝', txt:'📃', md:'📃', csv:'📊', jpg:'🖼️', jpeg:'🖼️', png:'🖼️', gif:'🖼️', webp:'🖼️' };
+function getExt(n){ return n.split('.').pop().toLowerCase(); }
+function getIcon(n){ return FILE_ICONS[getExt(n)]||'📁'; }
+function fmtSize(b){ return b<1024?b+'B':b<1048576?(b/1024).toFixed(1)+'KB':(b/1048576).toFixed(1)+'MB'; }
+function isImg(n){ return ['jpg','jpeg','png','gif','webp'].includes(getExt(n)); }
+
+function handleFiles(files){
+  if(!files.length) return;
+  if(attachedFiles.length+files.length>5){alert('Max 5 file');return;}
+  Array.from(files).forEach(file=>{
+    if(file.size>20*1024*1024){alert('File troppo grande: '+file.name);return;}
+    const r=new FileReader();
+    r.onload=e=>{
+      attachedFiles.push({name:file.name,type:file.type,size:file.size,content:e.target.result,dataUrl:isImg(file.name)?e.target.result:null});
+      renderPreviews();
+    };
+    if(isImg(file.name)) r.readAsDataURL(file); else r.readAsText(file);
+  });
+  document.getElementById('fileInput').value='';
+}
+
+function renderPreviews(){
+  const a=document.getElementById('filePreviewArea');
+  a.style.display=attachedFiles.length?'flex':'none';
+  a.innerHTML=attachedFiles.map((f,i)=>
+    '<div class="file-chip"><span>'+getIcon(f.name)+'</span><span class="fname">'+f.name+'</span><span class="fsize">'+fmtSize(f.size)+'</span><div class="fremove" onclick="removeFile('+i+')">✕</div></div>'
+  ).join('');
+}
+
+function removeFile(i){ attachedFiles.splice(i,1); renderPreviews(); }
+
+function showFilesInChat(files){
+  const wrap=document.getElementById('chatMessages');
+  const welcome=document.getElementById('chatWelcome');
+  if(welcome) welcome.remove();
+  files.forEach(f=>{
+    const row=document.createElement('div');
+    row.className='msg-row user';
+    const av=document.createElement('div');
+    av.className='msg-avatar usr'; av.textContent='◈';
+    const bubble=document.createElement('div');
+    bubble.className='msg-bubble user';
+    const lbl=document.createElement('div');
+    lbl.className='msg-label'; lbl.textContent='TU — FILE';
+    if(f.dataUrl){
+      const img=document.createElement('img');
+      img.src=f.dataUrl; img.className='img-preview'; img.alt=f.name;
+      const fn=document.createElement('div');
+      fn.style.cssText='font-size:10px;color:var(--text-dim);margin-top:6px;';
+      fn.textContent=f.name;
+      bubble.appendChild(lbl); bubble.appendChild(img); bubble.appendChild(fn);
+    } else {
+      const fb=document.createElement('div');
+      fb.className='file-bubble';
+      fb.innerHTML='<div class="ficon">'+getIcon(f.name)+'</div><div class="finfo"><div class="fname">'+f.name+'</div><div class="fmeta">'+fmtSize(f.size)+' · '+getExt(f.name).toUpperCase()+'</div></div>';
+      bubble.appendChild(lbl); bubble.appendChild(fb);
+    }
+    row.appendChild(av); row.appendChild(bubble);
+    wrap.appendChild(row);
+  });
+  wrap.scrollTop=wrap.scrollHeight;
+}
+
+
+// ============ INIT ============
+// Restore session
+const saved = localStorage.getItem('nexus_user');
+if (saved) {
+  currentUser = JSON.parse(saved);
+  selectedPlan = currentUser.plan;
+}
+if (apiKey) document.getElementById('sendMsgBtn') && (document.getElementById('sendMsgBtn').disabled = false);
+</script>
+</body>
+</html>
