@@ -518,102 +518,96 @@ if(ak){const sb=document.getElementById('sb');if(sb)sb.disabled=false;}
 try{const s=localStorage.getItem('nexus_user');if(s){cu=JSON.parse(s);sp=cu.plan;}}catch(e){}
 </script>
 
-<!-- Firebase — caricato dopo, non blocca nulla -->
-<script type="module">
-(async()=>{
+<!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+<script>
+(function(){
   try{
-    const{initializeApp}=await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js');
-    const{getAuth,createUserWithEmailAndPassword,signInWithEmailAndPassword,signInWithRedirect,getRedirectResult,GoogleAuthProvider,onAuthStateChanged,signOut}=await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js');
-    const{getFirestore,doc,setDoc,getDoc,updateDoc}=await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js');
-
-    const app=initializeApp({
-      apiKey:"AIzaSyDWs6ocXH2uuPXedt9pI6njkmRGqVhuf04",
-      authDomain:"nexus-ai-ac207.firebaseapp.com",
-      projectId:"nexus-ai-ac207",
-      storageBucket:"nexus-ai-ac207.firebasestorage.app",
-      messagingSenderId:"306814240505",
-      appId:"1:306814240505:web:2a57dea5b31d7fc85fc428"
+    const app = firebase.initializeApp({
+      apiKey: "AIzaSyDWs6ocXH2uuPXedt9pI6njkmRGqVhuf04",
+      authDomain: "nexus-ai-ac207.firebaseapp.com",
+      projectId: "nexus-ai-ac207",
+      storageBucket: "nexus-ai-ac207.firebasestorage.app",
+      messagingSenderId: "306814240505",
+      appId: "1:306814240505:web:2a57dea5b31d7fc85fc428"
     });
 
-    const auth=getAuth(app), db=getFirestore(app), gp=new GoogleAuthProvider();
+    const auth = firebase.auth();
+    const db = firebase.firestore();
 
-    // Funzione per salvare utente e andare alla chat
     async function handleUser(user){
       try{
-        const s=await getDoc(doc(db,'users',user.uid));
-        const d=s.exists()?s.data():{};
-        if(!s.exists()){
-          await setDoc(doc(db,'users',user.uid),{
-            name:user.displayName||'Utente',
-            email:user.email,
-            plan:'free',
-            msgCount:0,
-            createdAt:new Date().toISOString()
+        const snap = await db.collection('users').doc(user.uid).get();
+        if(!snap.exists){
+          await db.collection('users').doc(user.uid).set({
+            name: user.displayName||'Utente',
+            email: user.email,
+            plan: window._sp||'free',
+            msgCount: 0,
+            createdAt: new Date().toISOString()
           });
         }
-        const userData={
-          name:d.name||user.displayName||'Utente',
-          email:user.email,
-          plan:d.plan||'free',
-          msgCount:d.msgCount||0,
-          uid:user.uid
+        const d = snap.exists ? snap.data() : {};
+        const userData = {
+          name: d.name||user.displayName||'Utente',
+          email: user.email,
+          plan: d.plan||'free',
+          msgCount: d.msgCount||0,
+          uid: user.uid
         };
-        localStorage.setItem('nexus_user',JSON.stringify(userData));
+        localStorage.setItem('nexus_user', JSON.stringify(userData));
         if(window._setUser) window._setUser(userData);
       }catch(e){
-        console.warn('Firestore error:',e);
-        const userData={name:user.displayName||'Utente',email:user.email,plan:'free',msgCount:0,uid:user.uid};
-        localStorage.setItem('nexus_user',JSON.stringify(userData));
+        console.warn('Firestore:', e);
+        const userData = {name:user.displayName||'Utente',email:user.email,plan:'free',msgCount:0,uid:user.uid};
+        localStorage.setItem('nexus_user', JSON.stringify(userData));
         if(window._setUser) window._setUser(userData);
       }
     }
 
-    // PRIMA COSA: controlla se stiamo tornando da un redirect Google
-    try{
-      const result=await getRedirectResult(auth);
-      if(result && result.user){
-        console.log('Redirect Google rilevato:', result.user.displayName);
-        await handleUser(result.user);
-      }
-    }catch(e){ console.warn('getRedirectResult error:',e.message); }
+    // Login Email
+    window.fbLogin = (em,pw) => auth.signInWithEmailAndPassword(em,pw);
 
-    // Esponi le funzioni
-    window.fbLogin=(em,pw)=>signInWithEmailAndPassword(auth,em,pw);
-
-    window.fbRegister=async(em,pw,name)=>{
-      const cred=await createUserWithEmailAndPassword(auth,em,pw);
-      await setDoc(doc(db,'users',cred.user.uid),{
-        name,email:em,plan:window._sp||'free',msgCount:0,createdAt:new Date().toISOString()
+    // Registrazione Email
+    window.fbRegister = async(em,pw,name) => {
+      const cred = await auth.createUserWithEmailAndPassword(em,pw);
+      await db.collection('users').doc(cred.user.uid).set({
+        name, email:em, plan:window._sp||'free', msgCount:0, createdAt:new Date().toISOString()
       });
       return cred;
     };
 
-    window.fbGoogleLogin=async()=>{
-      await signInWithRedirect(auth,gp);
+    // Login Google con POPUP (compat funziona su GitHub Pages)
+    window.fbGoogleLogin = async() => {
+      const provider = new firebase.auth.GoogleAuthProvider();
+      const result = await auth.signInWithPopup(provider);
+      await handleUser(result.user);
     };
 
-    window.fbLogout=()=>signOut(auth);
+    // Logout
+    window.fbLogout = () => auth.signOut();
 
-    window.fbUpdateMsgCount=async(uid,cnt)=>{
-      try{await updateDoc(doc(db,'users',uid),{msgCount:cnt});}catch(e){}
+    // Aggiorna contatore messaggi
+    window.fbUpdateMsgCount = async(uid,cnt) => {
+      try{ await db.collection('users').doc(uid).update({msgCount:cnt}); }catch(e){}
     };
 
-    // Ascolta cambio stato auth (per email/password login)
-    onAuthStateChanged(auth, async user=>{
+    // Ascolta stato auth per email/password
+    auth.onAuthStateChanged(async user => {
       if(user){
-        // Controlla se l utente e gia nella chat (evita loop)
-        const chatPage=document.getElementById('chatPage');
-        if(chatPage && chatPage.classList.contains('active')) return;
+        const chatActive = document.getElementById('chatPage').classList.contains('active');
+        if(chatActive) return;
         await handleUser(user);
       }
     });
 
-    console.log('Firebase OK');
+    console.log('Firebase compat OK');
   }catch(e){
-    console.warn('Firebase offline:',e.message);
+    console.warn('Firebase non disponibile:', e.message);
   }
 })();
 </script>
-
 </body>
 </html>
